@@ -5,8 +5,8 @@ A skill for Claude Code and other agents: turn course material (past papers, a q
 ## Restore on a machine
 
 ```sh
-git clone https://github.com/Y3FAI/flooki-exam ~/sync/skills/flooki-exam
-mkdir -p ~/.claude/skills && ln -sfn ~/sync/skills/flooki-exam ~/.claude/skills/flooki-exam
+git clone https://github.com/Y3FAI/skills ~/sync/skills     # this skill is skills/flooki-exam
+bash ~/sync/skills/link.sh
 # token, once, from the clipboard (never paste it into a chat):
 mkdir -p ~/.config/flooki && pbpaste > ~/.config/flooki/token && chmod 600 ~/.config/flooki/token
 ```
