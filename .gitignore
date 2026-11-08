@@ -1,0 +1,8 @@
+# runtime output: never commit audio, caches or the copied player
+.wrangler/
+__pycache__/
+*.pyc
+.DS_Store
+*.mp3
+examples/minimal/audio/
+examples/minimal/read-along/

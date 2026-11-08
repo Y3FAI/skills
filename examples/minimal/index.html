@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Read-along example</title>
+<style>
+  body { margin: 0; font: 18px/1.7 -apple-system, "Segoe UI", Arial, sans-serif; color: #16243b; background: #fff; }
+  main { max-width: 720px; margin: auto; padding: 48px 20px 140px; }
+  .rule { background: #eff6ff; border-left: 4px solid #2d72c8; padding: 14px 18px; margin: 16px 0; }
+  .quiz { border: 1px dashed #c8d7e8; padding: 14px 18px; color: #53647a; }
+</style>
+</head>
+<body>
+<main id="top">
+  <h1 class="say" data-say="Read along example.">Read-along example</h1>
+
+  <section>
+    <h2 class="say">The 2 by 2 determinant</h2>
+    <div data-box="rule">
+      <!-- A formula: the page shows symbols, data-say says it in words, data-role gives it a longer pause. -->
+      <p class="rule say" data-role="equation"
+         data-say="The determinant is A times d, minus b times c: the main diagonal minus the other diagonal.">
+        det(A) = ad − bc
+      </p>
+    </div>
+    <div data-box="explain">
+      <p class="say">Multiply down the main diagonal, then subtract the other diagonal. If the answer is zero, the matrix has no inverse.</p>
+    </div>
+    <div data-box="example">
+      <p class="say" data-role="question" data-say="Example. Find the determinant of the matrix with rows 1, 2 and 3, 4.">
+        Example: find det of [1 2; 3 4].
+      </p>
+      <ol>
+        <li class="say" data-role="step" data-say="1 times 4 is 4, and 2 times 3 is 6.">1·4 = 4 and 2·3 = 6.</li>
+        <li class="say" data-role="step" data-say="4 minus 6 is minus 2.">4 − 6 = −2.</li>
+      </ol>
+    </div>
+    <!-- Not narrated: no class "say". Quizzes, tags and sources stay silent. -->
+    <div class="quiz">Practice: det of [2 0; 0 3]? (Not read aloud.)</div>
+  </section>
+
+  <section>
+    <h2 class="say">The dot product</h2>
+    <p class="rule say" data-role="equation"
+       data-say="The dot product: multiply matching coordinates, then add. Zero means the vectors are at right angles.">
+      u·v = u₁v₁ + u₂v₂ + u₃v₃
+    </p>
+  </section>
+</main>
+</body>
+</html>

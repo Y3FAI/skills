@@ -1,0 +1,13 @@
+{
+  "page": "index.html",
+  "slug": "read-along-example",
+  "selector": ".say",
+  "root": "main#top",
+  "section": "section",
+  "artist": "Read-along example",
+  "album": "Examples",
+  "tts": "local",
+  "verify": "auto",
+  "publish": {"mode": "local", "folder": "audio"},
+  "player": "copy"
+}
