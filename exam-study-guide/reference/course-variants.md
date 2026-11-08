@@ -1,6 +1,6 @@
 # Each class had its own way
 
-Choose the shape from what the exam rewards, then confirm it with the student on a sample. All of these live in github.com/Y3FAI/y3f under `2026-fall/<course>/`, and each folder's README is the full spec.
+These are examples, not a menu. They show how the guide's shape followed each course's exam, resources and content. A new course may fit one of them, a mix, or need a new shape. Even inside one guide, different topics can need different parts. Choose from what the exam rewards and what the material looks like, then confirm the choice with the student on a sample. All of these live in github.com/Y3FAI/y3f under `2026-fall/<course>/`, and each folder's README is the full spec.
 
 | Course | What the exam rewards | Shape | Reference |
 |---|---|---|---|

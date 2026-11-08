@@ -1,6 +1,6 @@
 # The IT241 v2 format (reference implementation)
 
-The live guide is in `2026-fall/it241/revision/midterm-guide-v2/` (github.com/Y3FAI/y3f). Its `README.md` and the docstring at the top of `build.py` are the full spec. Copy that folder's build tooling when you make a guide of this shape, and change the course paths.
+The live guide is in `2026-fall/it241/revision/midterm-guide-v2/` (github.com/Y3FAI/y3f). Its `README.md` and the docstring at the top of `build.py` are the full spec. It's a worked example, not a template. Reuse what fits, such as the card markup, the practice-item format and the checks, and change what the new course needs. A course with formulas, diagrams or no slide text will need other parts and other checks.
 
 ## Files
 

@@ -1,6 +1,6 @@
 # Exam analysis, maps and predictions
 
-This covers Stages 2–4 in detail, plus the predicted-questions method. The examples are from IT241 (Operating Systems, Modules 1–5).
+These are methods that worked, with examples from IT241 (Operating Systems, Modules 1–5). Use the parts the course's materials support. With few papers, lean on the test bank, the learning outcomes and the course plan, and say how strong the evidence is. A formula course may map formulas and concepts rather than every bullet.
 
 ## 1. Papers
 

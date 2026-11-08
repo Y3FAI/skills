@@ -1,6 +1,8 @@
 # What the student wants
 
-These rules come from the student's feedback while the October 2026 midterm guides were built: IT241, SCI201, STAT101 and MATH251. Each rule fixed a draft the student rejected. Apply them from the first draft.
+These rules come from the student's feedback while the October 2026 midterm guides were built: IT241, SCI201, STAT101 and MATH251. Each rule fixed a draft the student rejected.
+
+Most of them describe how the student studies, and hold everywhere. Some depend on the course's exam (true/false, question forms, short math questions). Fit those to the exam at hand. When the content calls for something these rules don't cover, adapt it and say why.
 
 ## The goal
 
