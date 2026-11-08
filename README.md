@@ -5,9 +5,9 @@ A skill for Claude Code and other agents: Kokoro narration for HTML pages, with 
 ## Restore on a machine (or after anything gets deleted)
 
 ```sh
-git clone https://github.com/Y3FAI/read-along ~/dev/read-along
-mkdir -p ~/.claude/skills && ln -sfn ~/dev/read-along ~/.claude/skills/read-along
-bash ~/dev/read-along/tools/setup.sh      # voice env: ~/.cache/read-along/venv (Kokoro, bs4, spaCy model)
+git clone https://github.com/Y3FAI/read-along ~/sync/skills/read-along
+mkdir -p ~/.claude/skills && ln -sfn ~/sync/skills/read-along ~/.claude/skills/read-along
+bash ~/sync/skills/read-along/tools/setup.sh      # voice env: ~/.cache/read-along/venv (Kokoro, bs4, spaCy model)
 ```
 
 The repo holds only source. `setup.sh` recreates everything else: the venv (~1 GB with PyTorch) and the ~330 MB Kokoro weights. Audio caches live in `~/.cache/read-along/<slug>/` and can be deleted at any time.
@@ -25,11 +25,11 @@ mkdir -p ~/.cache/y3f-readalong && ln -sfn ~/.cache/read-along/venv ~/.cache/y3f
 
 ```sh
 PY=~/.cache/read-along/venv/bin/python
-cp -R ~/dev/read-along/examples/minimal /tmp/ra-test && cd /tmp/ra-test
-$PY ~/dev/read-along/tools/readalong.py readalong.json plan
-$PY ~/dev/read-along/tools/readalong.py readalong.json voice
-$PY ~/dev/read-along/tools/readalong.py readalong.json render
-$PY ~/dev/read-along/tools/readalong.py readalong.json publish
+cp -R ~/sync/skills/read-along/examples/minimal /tmp/ra-test && cd /tmp/ra-test
+$PY ~/sync/skills/read-along/tools/readalong.py readalong.json plan
+$PY ~/sync/skills/read-along/tools/readalong.py readalong.json voice
+$PY ~/sync/skills/read-along/tools/readalong.py readalong.json render
+$PY ~/sync/skills/read-along/tools/readalong.py readalong.json publish
 python3 -m http.server      # open http://localhost:8000 and press play
 ```
 
