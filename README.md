@@ -18,6 +18,7 @@ Repo: **github.com/Y3FAI/skills** (public). On my Mac it lives at `~/sync/skills
 | [`read-along`](read-along/SKILL.md) | Add narrated audio with line-by-line highlighting to an HTML page: local Kokoro voice, math read aloud, MP3 and timings uploaded to R2 | `bash read-along/tools/setup.sh` (venv at `~/.cache/read-along/venv`), ffmpeg, logged-in `wrangler` |
 | [`flooki-exam`](flooki-exam/SKILL.md) | Turn past papers, a question bank or slides into a checked practice exam on flooki.app and return the link | Python 3 (standard library only); Flooki token in `~/.config/flooki/token` |
 | [`browser-use`](browser-use/SKILL.md) | Drive a real Chrome through chrome-devtools-mcp: DOM, CSS, network, console, performance traces, screenshots, clicking and typing | the chrome-devtools-mcp server configured in the agent |
+| [`exam-study-guide`](exam-study-guide/SKILL.md) | Build an exam study guide from slides, past papers and banks: exam analysis → concept map → SS/S/A/B priorities → micro-sections → cards + exam-pattern questions → read-along. Captures each course's shape (IT241, SCI201, STAT101, MATH251, ENG103) | the course sources (slides, papers, banks); the `read-along` skill for audio |
 | [`llm-chapter-assignment`](llm-chapter-assignment/SKILL.md) | Build and grade the end-of-chapter assignment notebook for Raschka's *Build a Large Language Model (From Scratch)*, with an Arabic lab | the book PDFs and `~/learn/llm-from-scratch` (torch, tiktoken, nbformat) |
 
 ## Install on a new machine
