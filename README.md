@@ -10,7 +10,12 @@ mkdir -p ~/.claude/skills && ln -sfn ~/dev/read-along ~/.claude/skills/read-alon
 bash ~/dev/read-along/tools/setup.sh      # voice env: ~/.cache/read-along/venv (Kokoro, bs4, spaCy model)
 ```
 
-The repo holds only source. `setup.sh` recreates everything else: the venv, the PyTorch install and the ~330 MB Kokoro weights. Audio caches live in `~/.cache/read-along/<slug>/` and can be deleted at any time.
+The repo holds only source. `setup.sh` recreates everything else: the venv (~1 GB with PyTorch) and the ~330 MB Kokoro weights. Audio caches live in `~/.cache/read-along/<slug>/` and can be deleted at any time.
+
+Older y3f pages have their own `build-audio.py` and `tools/kokoro_local.py`, which expect `~/.cache/y3f-readalong/kokoro-venv`. Point that path at the same venv:
+```sh
+mkdir -p ~/.cache/y3f-readalong && ln -sfn ~/.cache/read-along/venv ~/.cache/y3f-readalong/kokoro-venv
+```
 
 **Needs:** [`uv`](https://docs.astral.sh/uv/), `ffmpeg`/`ffprobe`.
 - Whisper/Nova checks and R2 uploads also need Node with a logged-in `npx wrangler`.
