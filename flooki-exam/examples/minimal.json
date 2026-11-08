@@ -1,0 +1,36 @@
+{
+  "title": "Physics Quick Check",
+  "description": "Three questions in the three Flooki question types.",
+  "metadata": {
+    "subject": "PHYS101",
+    "institution": "Saudi Electronic University",
+    "examType": "other",
+    "customExamType": "Quick Check"
+  },
+  "questions": [
+    {
+      "type": "multiple_choice",
+      "topic": "Ohm's law",
+      "text": "A $12\\text{ V}$ battery drives a current through a $4\\ \\Omega$ resistor. What is the current?",
+      "options": ["$48\\text{ A}$", "$3\\text{ A}$", "$0.33\\text{ A}$", "$16\\text{ A}$"],
+      "correctIndex": 1,
+      "explanation": "**Answer:** $3\\text{ A}$.\n\n$$I = \\frac{\\Delta V}{R} = \\frac{12}{4} = 3\\text{ A}$$\n\n**Why not the others:** $48\\text{ A}$ multiplies instead of dividing, and $0.33\\text{ A}$ divides the wrong way round.",
+      "source": "example: fields like this stay in the file and are not sent"
+    },
+    {
+      "type": "true_false",
+      "topic": "Magnetic force",
+      "text": "A magnetic field can exert a force on a stationary charge.",
+      "options": ["True", "False"],
+      "correctIndex": 1,
+      "explanation": "**Answer:** False.\n\n$F_B = |q|vB\\sin\\theta$, and a charge at rest has $v = 0$, so the magnetic force is zero however strong the field."
+    },
+    {
+      "type": "short_answer",
+      "topic": "Capacitance",
+      "text": "A $2\\text{ nF}$ capacitor is connected to a $14\\text{ V}$ battery. How much charge does it store?",
+      "correctAnswer": "$28\\text{ nC}$ ($2.8\\times10^{-8}$ C)",
+      "explanation": "$$Q = C\\,\\Delta V = (2\\times10^{-9})(14) = 2.8\\times10^{-8}\\text{ C} = 28\\text{ nC}$$"
+    }
+  ]
+}
