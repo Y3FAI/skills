@@ -5,8 +5,8 @@ A skill for Claude Code and other agents: Kokoro narration for HTML pages, with 
 ## Restore on a machine (or after anything gets deleted)
 
 ```sh
-git clone https://github.com/Y3FAI/read-along ~/sync/skills/read-along
-mkdir -p ~/.claude/skills && ln -sfn ~/sync/skills/read-along ~/.claude/skills/read-along
+git clone https://github.com/Y3FAI/skills ~/sync/skills     # this skill is skills/read-along
+bash ~/sync/skills/link.sh
 bash ~/sync/skills/read-along/tools/setup.sh      # voice env: ~/.cache/read-along/venv (Kokoro, bs4, spaCy model)
 ```
 
