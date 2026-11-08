@@ -1,0 +1,7 @@
+# never commit tokens or local state
+.env
+.env.*
+token
+__pycache__/
+*.pyc
+.DS_Store
