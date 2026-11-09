@@ -55,6 +55,7 @@ Most of them describe how the student studies, and hold everywhere. Some depend 
 
 ## Answers and explanations
 
+- **Clear, coherent and complete, with no gaps** (IT241 final, 2026-11-09). Every explanation, card and model answer must read clearly, follow logically, and leave nothing out that a student needs to answer the section's questions. Enforce it with the two-layer check in [clarity-check.md](clarity-check.md).
 - **Written questions:** a box to write the answer in, then "Show the answer" to compare.
 - **Model answers:** "as short as possible but fully answer full mark the question", so the student can memorize them without losing marks. Organize them as lists or short lines, never a paragraph.
 - **Choice explanations are quick:** the slide line that settles the answer, then at most a short plain-words `why` of 30 words or fewer. With no slide line to quote, a short plain `why` alone.

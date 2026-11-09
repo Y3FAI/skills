@@ -83,6 +83,18 @@ Use whatever the papers allow. With few or no papers, use the test bank, the lea
   - a symbol the voice can't read.
 
   Adapt the list to the material.
+- **Check that every explanation is clear, coherent and complete, with no gaps.** The student asked for this for the IT241 final (2026-11-09). Do it in two layers:
+  - **Build checks** catch the gaps a script can see:
+    - an answer that no card up to that section teaches;
+    - an explanation that never states its answer;
+    - a written answer with fewer points than the question asks, or a comparison with one side;
+    - a question a slide asks that the card leaves open;
+    - an abbreviation used before it is spelled out.
+  - **A clarity review** covers what only a reader can judge.
+    - Someone who didn't write the section reads it as a student: a fresh agent or the student.
+    - They answer every question from the cards alone, then judge each section clear, coherent, complete and answerable.
+    - The build refuses to publish a section without a passing review for its current content, keyed by a hash of the section, so any edit asks for a new review.
+  - The IT241 final guide is the reference: [reference/clarity-check.md](reference/clarity-check.md).
 - Give the page dark mode.
 
 ### 7 · Read-along
