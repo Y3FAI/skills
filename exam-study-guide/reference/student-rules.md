@@ -14,15 +14,19 @@ Most of them describe how the student studies, and hold everywhere. Some depend 
 
 ## Organization
 
-1. **Break the slides into the form their content needs:**
-   - comparisons → a table;
-   - sequences → numbered steps;
-   - definitions → a term list;
-   - figures → redrawn;
-   - code → shown as code, with notes.
+1. **Break the slides into the form their content needs: HTML appropriate structure for understanding.**
+   - Sequences become numbered steps.
+   - Definitions become a term list, or bullets with a bold lead for two or three items.
+   - A set of things, each with a note, becomes bullets.
+   - Use **a table only** for a genuine side-by-side comparison with short cells, or for a table the slide itself shows. Put long details in bullets under the table.
+   - Figures are redrawn.
+   - Code is shown as code, with notes.
+
+   Too many tables made reading and understanding harder (IT241 final, 2026-11-11). Short two-column tables of a term and its meaning, steps in a table, and long cells were all lists in disguise. A build check flags them (see [clarity-check.md](clarity-check.md)).
 
    Slides are often written badly. Dense paragraphs hide facts: the device-status table sat in a paragraph, and the student missed it until a question asked about it. Pull every fact out where it can be seen.
 2. **Keep every slide line, in the slide's own wording.** Exams lift that wording. A coverage check proves nothing was dropped.
+   - **Slides first** (IT241 final, 2026-11-11). The slide content alone is large, and no midterm question came from the textbook. The main guide teaches the slides only. Topics that only the textbook or its test bank cover go on a separate "textbook extras" page for later study. A textbook question that appeared on a past exam stays in the main guide.
 3. **Adapt each section; don't apply a template.**
    - When the student gives an example structure (say "what it is / why it exists / what it is not"), it is an example, not a template for every concept.
    - Some concepts need "what it is", some need "why it exists", some need background, some need nothing. Repeating the same headings everywhere was rejected as rigid.
@@ -34,7 +38,7 @@ Most of them describe how the student studies, and hold everywhere. Some depend 
 ## Writing
 
 - **Plain, simple words.** Not philosophical, not written in an odd way.
-- **No walls of text.** Use lists and tables, and short lines.
+- **No walls of text.** Use lists, short lines, and a table only where it helps (see Organization 1).
 - **Mark exam focus in red;** the student asked for red highlights. Put a red trap box on common mix-ups ("waiting ≠ ready", "full starts at 0, empty starts at n").
 - **Don't add explanation that just repeats the slide.**
 

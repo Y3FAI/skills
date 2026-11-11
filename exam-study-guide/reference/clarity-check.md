@@ -15,6 +15,7 @@ They caught real gaps in the first module built with them: 40 problems in Module
 | Slide questions are answered | A slide line ending in "?" must be on the card with an answer right after it. | "Can request (3,3,0) by P4 be granted?" left open on the slides |
 | Abbreviations | Spelled out at first use, unless whitelisted. | |
 | No TeX on cards; no "section N", "the slide" or "the figure" | regex | |
+| HTML appropriate structure for understanding | Flags a card table that should be another shape. Under 2 rows: bullets. A Step column: a numbered list. A cell over 12 words (numbers aside): shorten it, with details in bullets. A two-column table whose meanings average over 7 words: a term list. A two-column table of words with under 6 rows: a term list or bullets. The review judges the rest. | 19 tables in IT241 Module 6, 22 in Module 9 (2026-11-11) |
 
 Word matching needs a light stemmer: box/boxes, process/processes, ignore/ignoring, state/states.
 
