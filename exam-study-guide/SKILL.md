@@ -56,6 +56,7 @@ Use whatever the papers allow. With few or no papers, use the test bank, the lea
 - Build a map of every concept in scope, in the slides' own wording, organized in a hierarchy.
 - Check it against the slides, so nothing is lost.
 - How detailed it is depends on the course. IT241 needed every bullet, because its exams lift slide wording. A formula course may be better mapped by formula and concept.
+- **Slides first.** Map what the slides teach. Topics that only the textbook or its test bank cover go on a separate list for a later "textbook extras" page; a textbook question that was on a past exam stays with the slides.
 
 ### 4 · Set priorities · show the student
 
@@ -66,7 +67,11 @@ Use whatever the papers allow. With few or no papers, use the test bank, the lea
 ### 5 · Plan and sample · get approval
 
 - Plan small sections in learning order, grouped into parts. Add comparison sections where students mix things up.
-- Pick each section's parts to suit its content.
+- Pick each section's parts to suit its content, and give each piece of content the HTML shape that helps a reader understand it:
+  - steps or an order: a numbered list;
+  - terms and their meanings: a term list, or bullets with a bold lead for two or three items;
+  - a set of things, each with a note: bullets;
+  - **a table only** for a real side-by-side comparison with short cells, or a table the slide itself shows.
 - Build one or two sample sections (with audio, if the page has read-along) and wait for the student's reaction before building the rest.
 
 ### 6 · Build, one unit at a time
@@ -80,7 +85,8 @@ Use whatever the papers allow. With few or no papers, use the test bank, the lea
   - an explanation that's too long;
   - a question type the exam doesn't use;
   - text that points at a section number;
-  - a symbol the voice can't read.
+  - a symbol the voice can't read;
+  - a table that should be another shape (**HTML appropriate structure for understanding**): under two rows, steps written as rows, rows numbered 1, 2, 3, cells over 12 words, a two-column table of terms and meanings.
 
   Adapt the list to the material.
 - **Check that every explanation is clear, coherent and complete, with no gaps.** The student asked for this for the IT241 final (2026-11-09). Do it in two layers:

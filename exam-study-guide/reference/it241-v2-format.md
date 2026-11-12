@@ -61,6 +61,9 @@ dict(q="What is the device-status table?", answer="**…** list or short lines")
 - An AI-written item is true/false.
 - A section's `say` names a line that no card shows.
 
+The final guide (`2026-fall/it241/final-prep/`, Modules 6–13) adds two layers on top: the clarity checks and review gate,
+and the structure check (a table that should be a list). Both are in [clarity-check.md](clarity-check.md).
+
 These flags print reports instead of stopping:
 
 - `--cover` lists slide lines that no card covers.
