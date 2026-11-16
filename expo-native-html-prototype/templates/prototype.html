@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>App prototype</title>
+<!--
+  A working phone prototype: one file, no build step, no libraries. Open it in a browser.
+  Replace the sample content (trips) with the app's; keep the machinery:
+    - a navigation stack with the platform's push and back gesture (iOS swipe, Android predictive back)
+    - bottom sheets that drag to close and ride the keyboard
+    - a tile that grows into its screen (container transform)
+    - the side panel: platform, options to compare one moment, direction, theme, slow motion, Reduce Motion
+  Every motion value lives in IOS / ANDROID below; the native app copies them (see the skill's
+  reference/native-mapping.md). Comments marked "native:" name the component each piece becomes.
+-->
+<style>
+:root{color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:#D9DCE1;font:14px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;color:#1B1D21}
+.wrap{display:flex;flex-wrap:wrap;gap:40px;padding:28px 20px;justify-content:center;align-items:flex-start}
+
+/* ---------- the side panel (the page, not the app) ---------- */
+.side{width:320px;max-width:100%}
+.side h1{font-size:18px;margin:6px 0}
+.side p{margin:0 0 14px;color:#4A4F57}
+.side h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#666B73;margin:20px 0 8px}
+.side label{display:flex;align-items:flex-start;gap:8px;margin:0 0 6px;cursor:pointer}
+.side label input{margin-top:4px}
+.side .opt b{display:block}
+.side ul{margin:0;padding-inline-start:18px;color:#33373E}
+.side li{margin:0 0 6px}
+.side code{background:#C9CDD4;border-radius:5px;padding:0 5px;font-size:13px}
+.side .row{display:flex;flex-wrap:wrap;gap:4px 14px}
+.side button{font:inherit;border:0;border-radius:8px;background:#C9CDD4;padding:6px 12px;cursor:pointer}
+
+/* ---------- the phone ---------- */
+.phone{
+  /* tokens: light */
+  --bg:#F2F3F5;--surface:#FFFFFF;--ink:#16181C;--muted:#6A707A;--fill:#E3E6EB;--line:rgba(0,0,0,.08);
+  --accent:#2F5BD3;--on-accent:#fff;--scrim:rgba(0,0,0,.28);--frost:rgba(255,255,255,.58);--kb:#C9CDD4;
+  --w:390px;--h:844px;--r:48px;--k:1;
+  position:relative;flex:none;width:var(--w);height:var(--h);margin:10px;border-radius:var(--r);overflow:hidden;
+  background:var(--bg);color:var(--ink);box-shadow:0 0 0 10px #15171B,0 24px 48px rgba(0,0,0,.22);
+  isolation:isolate;user-select:none;-webkit-user-select:none;-webkit-font-smoothing:antialiased;
+  font-family:system-ui,-apple-system,"Geeza Pro","Segoe UI",sans-serif;font-size:17px;line-height:1.35}
+.phone[data-theme=dark]{--bg:#0E0F12;--surface:#1A1C20;--ink:#F3F4F6;--muted:#9AA0AA;--fill:#26292F;--line:rgba(255,255,255,.08);
+  --accent:#8FB0FF;--on-accent:#0E1A3A;--scrim:rgba(0,0,0,.5);--frost:rgba(40,42,48,.55);--kb:#2A2D33}
+.phone[data-platform=android]{--w:412px;--h:915px;--r:36px;font-family:Roboto,system-ui,"Segoe UI",sans-serif;font-size:16px}
+.phone button{font:inherit;color:inherit;border:0;background:transparent;padding:0;cursor:pointer;text-align:start;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.phone input{font:inherit;color:inherit;user-select:text;-webkit-user-select:text}
+.phone svg{flex:none}
+
+/* status bar and home indicator (decoration) */
+.sb{position:absolute;z-index:60;inset-inline:0;top:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 34px;font-size:16px;font-weight:600;pointer-events:none;direction:ltr}
+.phone[data-platform=android] .sb{height:40px;padding:0 22px;font-size:14px;font-weight:500}
+.hi{position:absolute;z-index:60;left:50%;bottom:8px;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:var(--ink);opacity:.85;pointer-events:none}
+.phone[data-platform=android] .hi{width:108px;height:4px;margin-left:-54px;bottom:10px;opacity:.6}
+
+/* screens: Home underneath, pushed screens on top. native: a native stack (react-native-screens) */
+.layer{position:absolute;inset:0;background:var(--bg);overflow:hidden;will-change:transform,opacity}
+.layer[hidden]{display:none}
+.layer.pushed{box-shadow:0 0 24px rgba(20,24,32,.12)}
+.shade{position:absolute;inset:0;z-index:20;background:#000;opacity:0;pointer-events:none}
+.scroll{position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain}
+.scroll::-webkit-scrollbar{display:none}
+
+/* Home header */
+.hdr{padding:62px 20px 6px;display:flex;align-items:center;justify-content:space-between}
+.phone[data-platform=android] .hdr{padding:48px 16px 6px}
+.hdr h1{margin:0;font-size:32px;line-height:40px;font-weight:700;letter-spacing:-.01em}
+.phone[data-platform=android] .hdr h1{font-size:28px;font-weight:400;letter-spacing:0}
+.icons{display:flex;gap:2px;margin-inline-end:-10px}
+.ib{position:relative;width:44px;height:44px;display:grid!important;place-items:center;border-radius:22px;overflow:hidden}
+.phone[data-platform=android] .ib{width:48px;height:48px;border-radius:24px}
+
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:12px 16px 140px}
+.tile{position:relative;display:block!important;width:100%;aspect-ratio:4/5;border-radius:24px;overflow:hidden;color:#fff}
+.phone[data-platform=android] .tile{border-radius:16px}
+.tile .art,.art{position:absolute;inset:0}
+.tile .nm{position:absolute;z-index:1;inset-inline:14px;bottom:12px;font-size:19px;font-weight:700;line-height:24px;text-shadow:0 1px 8px rgba(0,0,0,.25)}
+.tile.enter{opacity:0;transform:translateY(14px) scale(.96)}
+.tile.ghost{visibility:hidden}
+
+/* press feedback: iOS dims while held (no shrink: the tap acts on release, once), Android ripples */
+.phone[data-platform=ios] .pr{transition:opacity calc(120ms * var(--k)) ease-out,background-color calc(120ms * var(--k)) ease-out}
+.phone[data-platform=ios] .pr.down{opacity:.6}
+.phone[data-platform=ios] .row-b.down,.phone[data-platform=ios] .ib.down{opacity:1;background:var(--fill)}
+.rip{position:absolute;border-radius:50%;background:currentColor;opacity:.14;pointer-events:none;transform:scale(0)}
+
+/* the + button. native: iOS expo-blur BlurView (systemUltraThinMaterial); Android Material FAB */
+.fab{position:absolute;z-index:5;inset-inline-end:20px;bottom:40px;width:58px;height:58px;border-radius:29px;display:grid!important;place-items:center;
+  background:var(--frost);-webkit-backdrop-filter:blur(18px) saturate(180%);backdrop-filter:blur(18px) saturate(180%);
+  box-shadow:0 8px 24px rgba(20,24,32,.16),inset 0 0 0 1px rgba(255,255,255,.55);overflow:hidden}
+.phone[data-platform=android] .fab{inset-inline-end:16px;bottom:36px;width:56px;height:56px;border-radius:16px;background:#D8E2FF;color:#0E1A3A;
+  -webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 3px 6px rgba(0,0,0,.18),0 2px 4px rgba(0,0,0,.12)}
+.phone[data-platform=android][data-theme=dark] .fab{background:#2B3F78;color:#DCE4FF}
+
+/* top bars. native: iOS native-stack header; Android Material top app bar (64dp, title at the start) */
+.bar{position:relative;height:44px;margin-top:54px;display:flex;align-items:center;padding:0 8px}
+.bar .t{position:absolute;inset-inline:64px;text-align:center;font-weight:600;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phone[data-platform=android] .bar{height:64px;margin-top:40px;padding:0 4px}
+.phone[data-platform=android] .bar .t{position:static;text-align:start;font-size:22px;font-weight:400;margin-inline-start:4px}
+.back .a,.phone[data-platform=android] .back .i{display:none}
+.phone[data-platform=android] .back .a{display:block}
+[dir=rtl] .back svg{transform:scaleX(-1)}
+
+/* rows */
+.sec{margin:16px 16px 0;border-radius:14px;background:var(--surface);overflow:hidden}
+.phone[data-platform=android] .sec{margin:8px 0 0;border-radius:0;background:transparent}
+.row-b{position:relative;display:flex!important;align-items:center;gap:14px;width:100%;min-height:52px;padding:0 16px;overflow:hidden}
+.row-b + .row-b{box-shadow:inset 0 1px 0 var(--line)}
+.phone[data-platform=android] .row-b{min-height:56px;padding:0 24px}
+.phone[data-platform=android] .row-b + .row-b{box-shadow:none}
+.row-b .v{margin-inline-start:auto;color:var(--muted)}
+[dir=rtl] .row-b .chev{transform:scaleX(-1)}
+.phone[data-platform=android] .row-b .chev{display:none}
+
+/* detail screen (opened from a tile) */
+.hero{position:relative;height:340px;color:#fff;overflow:hidden}
+.hero .nm{position:absolute;inset-inline:20px;bottom:18px;font-size:34px;font-weight:700;line-height:40px}
+.hero .x{position:absolute;z-index:2;top:58px;inset-inline-end:16px;width:36px;height:36px;border-radius:18px;display:grid!important;place-items:center;background:rgba(0,0,0,.28);color:#fff}
+.hero .back{position:absolute;z-index:2;top:54px;inset-inline-start:8px;color:#fff}
+.off,.hero .off{display:none!important}
+.hero.landing .art,.hero.landing .nm{visibility:hidden}
+/* the picture in flight between a tile and the hero (it IS the transition) */
+.fly{position:absolute;z-index:12;overflow:hidden;pointer-events:none;color:#fff;display:none}
+.fly .nm{position:absolute;font-weight:700;white-space:nowrap;text-shadow:0 1px 8px rgba(0,0,0,.25)}
+.body{padding:18px 20px 120px}
+.body p{margin:0 0 14px;color:var(--muted)}
+.fact{display:flex;justify-content:space-between;padding:14px 0;box-shadow:inset 0 -1px 0 var(--line)}
+
+/* sheets. native: iOS formSheet (fitToContents, grabber); Android Material ModalBottomSheet via @expo/ui */
+.dim{position:absolute;inset:0;z-index:30;background:var(--scrim);opacity:0;pointer-events:none}
+.dim.on{pointer-events:auto}
+.sheet{position:absolute;z-index:31;inset-inline:0;bottom:0;background:var(--surface);border-radius:36px 36px 0 0;padding:10px 20px 44px;transform:translateY(110%);will-change:transform}
+.sheet[hidden]{display:none}
+.phone[data-platform=android] .sheet{border-radius:28px 28px 0 0;padding:8px 24px 40px;background:var(--bg)}
+.grab{width:36px;height:5px;border-radius:3px;background:var(--fill);margin:0 auto 14px}
+.phone[data-platform=android] .grab{width:32px;height:4px;margin:14px auto 20px;background:var(--muted);opacity:.5}
+.sheet h3{margin:0 0 14px;font-size:20px;line-height:26px;text-align:center}
+.phone[data-platform=android] .sheet h3{text-align:start;font-weight:400;font-size:22px}
+.field{width:100%;height:52px;border:0;border-radius:14px;background:var(--fill);padding:0 16px;outline:none;font-size:17px}
+.phone[data-platform=android] .field{border-radius:4px 4px 0 0;box-shadow:inset 0 -1px 0 var(--muted);height:56px}
+.phone[data-platform=android] .field:focus{box-shadow:inset 0 -2px 0 var(--accent)}
+.primary{position:relative;display:block!important;width:100%;height:52px;margin-top:14px;border-radius:14px!important;background:var(--accent)!important;color:var(--on-accent)!important;text-align:center!important;font-weight:600;overflow:hidden}
+.phone[data-platform=android] .primary{height:48px;border-radius:24px!important;font-weight:500}
+.primary:disabled{opacity:.4;cursor:default}
+
+/* the keyboard's place (decoration): sheets and fields ride on top of it */
+.kb{position:absolute;z-index:40;inset-inline:0;bottom:0;height:300px;background:var(--kb);transform:translateY(100%);display:grid;place-items:center;color:var(--muted);font-size:14px;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="phone" id="phone" data-platform="ios" data-theme="light" dir="ltr">
+    <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+
+    <section class="layer" id="L-home"><div class="shade"></div>
+      <div class="scroll">
+        <header class="hdr"><h1 data-s="title"></h1>
+          <div class="icons"><button class="ib pr" id="toSettings" data-a="settings"></button></div>
+        </header>
+        <div class="tiles" id="tiles"></div>
+      </div>
+      <button class="fab" id="fab" data-a="add"></button>
+    </section>
+
+    <section class="layer pushed" id="L-settings" hidden><div class="shade"></div>
+      <div class="scroll">
+        <div class="bar"><button class="ib pr back" data-a="back"></button><span class="t" data-s="settings"></span></div>
+        <div class="sec">
+          <button class="row-b pr" data-a="name"><span data-s="name"></span><span class="v" id="meName"></span><span class="chev"></span></button>
+          <button class="row-b pr"><span data-s="appearance"></span><span class="chev"></span></button>
+          <button class="row-b pr"><span data-s="about"></span><span class="chev"></span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- a trip: pushed, slid up or grown from its tile (the option in the panel) -->
+    <section class="layer pushed" id="L-detail" hidden><div class="shade"></div>
+      <div class="scroll">
+        <div class="hero" id="hero"><div class="art" id="heroArt"></div>
+          <button class="ib back pr" data-a="back"></button>
+          <button class="x" data-a="close" aria-label="Close"></button>
+          <span class="nm" id="heroName"></span>
+        </div>
+        <div class="body"><p data-s="blurb"></p>
+          <div class="fact"><span data-s="dates"></span><span class="v">12 – 19 Mar</span></div>
+          <div class="fact"><span data-s="people"></span><span class="v">3</span></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="dim" id="dim"></div>
+    <div class="sheet" id="S-add" hidden><div class="grab"></div><h3 data-s="newTrip"></h3>
+      <input class="field" id="addq" autocomplete="off" data-p="where">
+      <button class="primary pr" id="addgo" disabled data-s="add"></button></div>
+    <div class="sheet" id="S-name" hidden><div class="grab"></div><h3 data-s="yourName"></h3>
+      <input class="field" id="nameq" autocomplete="off" maxlength="40">
+      <button class="primary pr" id="namego" data-s="save"></button></div>
+    <div class="kb" id="kb">keyboard</div>
+    <div class="hi"></div>
+  </div>
+
+  <aside class="side">
+    <h1>Prototype</h1>
+    <p>One working phone. Tap, swipe and type as on the real device; the panel changes the platform and compares options for the same moment.</p>
+    <button id="reset">Reset</button>
+
+    <h2>Platform</h2>
+    <div class="row">
+      <label><input type="radio" name="platform" value="ios" checked>iPhone</label>
+      <label><input type="radio" name="platform" value="android">Android</label>
+    </div>
+
+    <h2>Opening a trip: pick one</h2>
+    <label class="opt"><input type="radio" name="open" value="grow" checked><span><b>A · Grows from its tile</b>The picture expands into the screen and shrinks back on close.</span></label>
+    <label class="opt"><input type="radio" name="open" value="push"><span><b>B · Push</b>The platform's own push, with its back gesture.</span></label>
+    <label class="opt"><input type="radio" name="open" value="up"><span><b>C · Slides up</b>A full-screen modal over Home.</span></label>
+
+    <h2>Layout</h2>
+    <div class="row">
+      <label><input type="radio" name="dir" value="ltr" checked>English</label>
+      <label><input type="radio" name="dir" value="rtl">العربية (RTL)</label>
+      <label><input type="radio" name="theme" value="light" checked>Light</label>
+      <label><input type="radio" name="theme" value="dark">Dark</label>
+    </div>
+
+    <h2>Motion</h2>
+    <label><input type="checkbox" id="slow"> Slow motion ×5</label>
+    <label><input type="checkbox" id="rm"> Reduce Motion</label>
+
+    <h2>Try</h2>
+    <ul>
+      <li>Tap a <b>tile</b>, then close it. Switch the option and do it again.</li>
+      <li><b>+</b> opens a sheet with the keyboard; drag the sheet down to close it.</li>
+      <li>The <b>settings</b> button pushes a screen. Back: iPhone, drag the screen sideways; Android, drag in from either edge (predictive back) or press <code>Esc</code>.</li>
+      <li>Settings → <b>Name</b>: the sheet and the keyboard rise together.</li>
+    </ul>
+    <h2>Notes</h2>
+    <ul>
+      <li>The grey block is where the real keyboard sits.</li>
+      <li>Every timing and curve is in <code>IOS</code> / <code>ANDROID</code> in the script.</li>
+    </ul>
+  </aside>
+</div>
+
+<script>
+// ---------- content (replace with the app's) ----------
+const S = {
+  en: { title: 'Trips', settings: 'Settings', name: 'Name', appearance: 'Appearance', about: 'About', newTrip: 'New trip',
+        where: 'Where to?', add: 'Add', yourName: 'Your name', save: 'Save', dates: 'Dates', people: 'People',
+        blurb: 'A short description of the trip. Real content, not lorem ipsum: the design has to hold the real thing.' },
+  ar: { title: 'رحلاتي', settings: 'الإعدادات', name: 'الاسم', appearance: 'المظهر', about: 'عن التطبيق', newTrip: 'رحلة جديدة',
+        where: 'إلى أين؟', add: 'إضافة', yourName: 'اسمك', save: 'حفظ', dates: 'التاريخ', people: 'الأشخاص',
+        blurb: 'وصف قصير للرحلة. محتوى حقيقي لا نص تجريبي: التصميم يجب أن يحتمل المحتوى الفعلي.' },
+};
+const trips = [
+  ['Lisbon', 'لشبونة', '#E07A5F', '#F2CC8F'], ['Kyoto', 'كيوتو', '#6D597A', '#E56B6F'], ['Cairo', 'القاهرة', '#B08968', '#E6CCB2'],
+  ['Oslo', 'أوسلو', '#355070', '#6D9DC5'], ['Lima', 'ليما', '#2A9D8F', '#E9C46A'], ['Seoul', 'سيول', '#3D405B', '#81B29A'],
+  ['Rome', 'روما', '#9C6644', '#DDB892'], ['Hanoi', 'هانوي', '#386641', '#A7C957'],
+].map(([en, ar, a, b]) => ({ en, ar, art: `linear-gradient(160deg, ${b}, ${a})` }));
+
+// ---------- motion: the values the native app copies ----------
+const IOS = {
+  ease: 'cubic-bezier(0.32,0.72,0,1)',   // UIKit sheets and navigation
+  out: 'cubic-bezier(0.23,1,0.32,1)',    // strong ease-out (things settling in place)
+  push: 460, pop: 400, settle: 320,      // ms
+  sheetIn: 480, sheetOut: 360, kb: 320, grow: 460, shrink: 400,
+};
+const ANDROID = {
+  enter: 'cubic-bezier(0.05,0.7,0.1,1)', // Material 3 emphasized decelerate (things arriving)
+  exit: 'cubic-bezier(0.3,0,0.8,0.15)',  // Material 3 emphasized accelerate (things leaving for good)
+  std: 'cubic-bezier(0.2,0,0,1)',        // Material 3 standard (on-screen moves)
+  push: 350, pop: 300, settle: 250,      // shared axis X
+  sheetIn: 400, sheetOut: 250, kb: 300, grow: 450, shrink: 400,  // container transform
+};
+
+// ---------- state, saved per viewer ----------
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const phone = $('#phone');
+const pref = { platform: 'ios', open: 'grow', dir: 'ltr', theme: 'light', slow: false, rm: false };
+try { Object.assign(pref, JSON.parse(localStorage.getItem('proto-pref') || '{}')); } catch {}
+const save = () => { try { localStorage.setItem('proto-pref', JSON.stringify(pref)); } catch {} };
+const ios = () => pref.platform === 'ios';
+const M = () => (ios() ? IOS : ANDROID);
+const T = (ms) => ms * (pref.slow ? 5 : 1);
+const reduced = () => pref.rm || matchMedia('(prefers-reduced-motion: reduce)').matches;
+const W = () => phone.clientWidth, H = () => phone.clientHeight, KB = 300;
+const lang = () => (pref.dir === 'rtl' ? 'ar' : 'en');
+const rect = (n) => { const a = n.getBoundingClientRect(), b = phone.getBoundingClientRect(); return { top: a.top - b.top, left: a.left - b.left, width: a.width, height: a.height }; };
+
+// ---------- icons (Lucide, ISC licence) ----------
+const I = {
+  plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  gear: '<path d="M14 17H5"/><path d="M19 7h-9"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>',
+  chevron: '<path d="m15 18-6-6 6-6"/>',
+  arrow: '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+  next: '<path d="m9 18 6-6-6-6"/>',
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+};
+const svg = (k, size = 24, w = 2, cls = '') => `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k]}</svg>`;
+$('#toSettings').innerHTML = svg('gear', 24, 1.8);
+$('#fab').innerHTML = svg('plus', 26, 2.2);
+$$('.back').forEach((b) => b.innerHTML = svg('chevron', 28, 2.2, 'i') + svg('arrow', 24, 2, 'a'));
+$$('.x').forEach((b) => b.innerHTML = svg('x', 18, 2.4));
+$$('.chev').forEach((c) => c.innerHTML = svg('next', 18, 2));
+
+// ---------- render ----------
+let myName = 'Sam';
+function render() {
+  phone.dataset.platform = pref.platform; phone.dataset.theme = pref.theme; phone.dir = pref.dir;
+  phone.style.setProperty('--k', pref.slow ? '5' : '1');
+  const s = S[lang()];
+  $$('[data-s]').forEach((n) => n.textContent = s[n.dataset.s]);
+  $$('[data-p]').forEach((n) => n.placeholder = s[n.dataset.p]);
+  $('#meName').textContent = myName;
+  $('#tiles').innerHTML = trips.map((t, i) => `<button class="tile pr" data-i="${i}"><span class="art" style="background:${t.art}"></span><span class="nm">${t[lang()]}</span></button>`).join('');
+}
+
+// ---------- press feedback ----------
+phone.addEventListener('pointerdown', (e) => {
+  const el = e.target.closest('.pr'); if (!el || el.disabled) return;
+  if (ios()) {
+    el.classList.add('down');
+    const up = () => { el.classList.remove('down'); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); };
+    addEventListener('pointerup', up); addEventListener('pointercancel', up);
+    return;
+  }
+  // Android ripple from the touch point. native: Pressable android_ripple { foreground: true }
+  const r = el.getBoundingClientRect(), size = Math.hypot(r.width, r.height) * 2;
+  const s = document.createElement('span'); s.className = 'rip';
+  Object.assign(s.style, { width: size + 'px', height: size + 'px', left: e.clientX - r.left - size / 2 + 'px', top: e.clientY - r.top - size / 2 + 'px' });
+  el.appendChild(s);
+  const grow = s.animate([{ transform: 'scale(0)' }, { transform: 'scale(1)' }], { duration: T(450), easing: ANDROID.std, fill: 'forwards' });
+  const fade = () => { removeEventListener('pointerup', fade); removeEventListener('pointercancel', fade);
+    grow.finished.catch(() => {}).then(() => s.animate([{ opacity: .14 }, { opacity: 0 }], { duration: T(200), fill: 'forwards' }).finished.then(() => s.remove())); };
+  addEventListener('pointerup', fade); addEventListener('pointercancel', fade);
+});
+
+// ---------- navigation stack ----------
+// native: iOS native stack push + back swipe; Android native stack with a shared-axis push and predictive back
+const L = { home: $('#L-home'), settings: $('#L-settings'), detail: $('#L-detail') };
+let stack = ['home'], busy = false, swallowClick = false;
+const sign = () => (pref.dir === 'rtl' ? -1 : 1); // where pushed screens come from: the right in LTR, the left in RTL
+
+function style(el, d, ease) { el.style.transition = d ? `transform ${d}ms ${ease}, opacity ${d}ms ${ease}` : 'none'; }
+// p: how far the top screen has gone back (0 = fully in, 1 = fully out)
+function pose(top, under, p, d) {
+  const shade = $('.shade', under);
+  const ease = ios() ? IOS.ease : ANDROID.std;
+  style(top, d, ease); style(under, d, ease);
+  shade.style.transition = d ? `opacity ${d}ms ${ease}` : 'none';
+  top.style.borderRadius = '';
+  if (reduced()) {
+    top.style.transform = under.style.transform = 'none'; under.style.opacity = '1'; top.style.opacity = String(1 - p); shade.style.opacity = '0';
+  } else if (ios()) {
+    top.style.opacity = '1'; under.style.opacity = '1';
+    top.style.transform = `translateX(${p * sign() * W()}px)`;
+    under.style.transform = `translateX(${-(1 - p) * 0.3 * sign() * W()}px)`;
+    shade.style.opacity = String((1 - p) * 0.08);
+  } else {
+    // Material shared axis X: both slide 30dp and fade through
+    top.style.transform = `translateX(${p * sign() * 30}px)`; top.style.opacity = String(1 - p);
+    under.style.transform = `translateX(${-(1 - p) * sign() * 30}px)`; under.style.opacity = String(p);
+    shade.style.opacity = '0';
+  }
+}
+function push(id) {
+  if (busy || stack.includes(id)) return;
+  const top = L[id], under = L[stack.at(-1)];
+  top.hidden = false; top.style.zIndex = String(stack.length + 1);
+  pose(top, under, 1, 0); void top.offsetWidth;
+  busy = true; stack.push(id);
+  const d = T(reduced() ? 240 : M().push);
+  pose(top, under, 0, d);
+  setTimeout(() => { busy = false; }, d);
+}
+function pop(from = 0) {
+  if (stack.length < 2 || busy) return;
+  const id = stack.at(-1), top = L[id], under = L[stack.at(-2)];
+  if (id === 'detail' && opened.how !== 'push') return closeDetail();
+  const d = T(reduced() ? 220 : Math.max(180, M().pop * (1 - from)));
+  busy = true;
+  pose(top, under, 1, d);
+  setTimeout(() => { top.hidden = true; stack.pop(); clear(top); clear(under); busy = false; }, d);
+}
+function clear(el) { el.style.transition = 'none'; el.style.transform = ''; el.style.opacity = ''; el.style.borderRadius = ''; el.style.clipPath = ''; }
+
+// Back gestures. iOS: drag the screen sideways from anywhere (iOS 26+ full-screen back swipe).
+// Android: predictive back from either edge: the screen shrinks and shows Home underneath.
+function backGesture(layer, id) {
+  layer.addEventListener('pointerdown', (e) => {
+    if (busy || stack.at(-1) !== id || e.target.closest('input')) return;
+    // iOS: a modal (grown or slid up) closes by its button; Android's system back closes anything
+    if (id === 'detail' && opened.how !== 'push' && ios()) return;
+    const pr = phone.getBoundingClientRect(), x = e.clientX - pr.left;
+    const edge = x < 40 ? 1 : x > pr.width - 40 ? -1 : 0;
+    if (!ios() && !edge) return;
+    const under = L[stack.at(-2)];
+    const x0 = e.clientX, y0 = e.clientY;
+    let drag = false, p = 0, lastX = x0, lastT = performance.now(), v = 0;
+    const move = (ev) => {
+      const dx = ev.clientX - x0, dy = ev.clientY - y0;
+      if (!drag) {
+        const ok = ios() ? dx * sign() > 10 : dx * edge > 10;
+        if (ok && Math.abs(dx) > Math.abs(dy) * 1.2) { drag = true; layer.setPointerCapture(e.pointerId); }
+        else if (Math.abs(dy) > 10 || Math.abs(dx) > 10) { end(); return; } else return;
+      }
+      const now = performance.now(); v = Math.abs(ev.clientX - lastX) / Math.max(1, now - lastT); lastX = ev.clientX; lastT = now;
+      if (ios()) { p = Math.min(1, Math.max(0, dx * sign() / W())); pose(layer, under, p, 0); }
+      else { p = Math.min(1, Math.max(0, dx * edge / (W() * 0.5))); peek(layer, under, p, edge, 0); }
+    };
+    const up = () => {
+      end(); if (!drag) return; swallowClick = true;
+      if (ios()) { if (p > 0.35 || v > 0.45) pop(p); else pose(layer, under, 0, T(IOS.settle)); return; }
+      if (p > 0.4 || v > 0.5) commitPeek(layer, under);
+      else peek(layer, under, 0, edge, T(ANDROID.settle));
+    };
+    const end = () => { layer.removeEventListener('pointermove', move); layer.removeEventListener('pointerup', up); layer.removeEventListener('pointercancel', up); };
+    layer.addEventListener('pointermove', move); layer.addEventListener('pointerup', up); layer.addEventListener('pointercancel', up);
+  });
+}
+// predictive back preview: the screen shrinks to 90%, moves a little toward the edge, rounds its corners
+function peek(top, under, g, edge, d) {
+  style(top, d, ANDROID.std); under.style.transition = 'none';
+  under.style.transform = 'none'; under.style.opacity = '1'; $('.shade', under).style.opacity = '0';
+  top.style.opacity = '1';
+  top.style.transform = `translateX(${g * edge * 0.06 * W()}px) scale(${1 - 0.1 * g})`;
+  top.style.borderRadius = g ? '28px' : '';
+}
+function commitPeek(top, under) {
+  if (stack.at(-1) === 'detail' && opened.how !== 'push') {
+    // settle the preview back to full size while the screen shrinks into its tile
+    style(top, T(M().shrink), ANDROID.std); top.style.transform = ''; top.style.borderRadius = '';
+    return closeDetail();
+  }
+  busy = true;
+  const d = T(200);
+  style(top, d, ANDROID.exit);
+  top.style.opacity = '0'; top.style.transform += ' scale(0.95)';
+  setTimeout(() => { top.hidden = true; stack.pop(); clear(top); clear(under); busy = false; }, d);
+}
+['settings', 'detail'].forEach((id) => backGesture(L[id], id));
+phone.addEventListener('pointerdown', () => { swallowClick = false; }, true); // only the drag's own click is swallowed
+phone.addEventListener('click', (e) => { if (swallowClick) { swallowClick = false; e.stopPropagation(); e.preventDefault(); } }, true);
+
+// ---------- keyboard and sheets ----------
+const kb = $('#kb'), dim = $('#dim');
+let kbUp = false, sheet = null, sheetBusy = false;
+function sheetTo(s, y, d, ease) { s.style.transition = d ? `transform ${d}ms ${ease}` : 'none'; s.style.transform = `translateY(${y}px)`; }
+function kbTo(up, d) {
+  kbUp = up;
+  const ease = ios() ? IOS.ease : ANDROID.std;
+  kb.style.transition = `transform ${d}ms ${ease}`; kb.style.transform = up ? 'translateY(0)' : 'translateY(100%)';
+  if (sheet && !sheetBusy) sheetTo(sheet, up ? -KB : 0, d, ease);
+}
+phone.addEventListener('focusin', (e) => { if (e.target.matches('input') && !kbUp) kbTo(true, T(M().kb)); });
+phone.addEventListener('focusout', () => setTimeout(() => { if (!phone.querySelector('input:focus') && kbUp) kbTo(false, T(M().kb)); }, 0));
+// A button or a sheet never steals focus from the field: a tap is never lost while the keyboard
+// moves, and a sheet stays put under the finger that grabs it (touching a sheet keeps the keyboard).
+phone.addEventListener('mousedown', (e) => {
+  if (!phone.querySelector('input:focus') || e.target.closest('input')) return;
+  if (e.target.closest('button') || e.target.closest('.sheet')) e.preventDefault();
+});
+
+function dimTo(on, d) { dim.style.transition = `opacity ${d}ms ease-out`; dim.style.opacity = on ? '1' : '0'; dim.classList.toggle('on', on); }
+function present(s, field) {
+  if (sheet) return;
+  sheet = s; s.hidden = false; sheetBusy = true;
+  const d = T(reduced() ? 220 : M().sheetIn), ease = ios() ? IOS.ease : ANDROID.enter;
+  if (reduced()) { sheetTo(s, field ? -KB : 0, 0); s.style.opacity = '0'; }
+  else { s.style.opacity = '1'; sheetTo(s, s.offsetHeight + 40, 0); }
+  void s.offsetWidth;
+  dimTo(true, T(300));
+  if (field) { kbUp = true; kb.style.transition = `transform ${d}ms ${ease}`; kb.style.transform = 'translateY(0)'; }
+  if (reduced()) { s.style.transition = `opacity ${d}ms ease-out`; s.style.opacity = '1'; } else sheetTo(s, field ? -KB : 0, d, ease);
+  if (field) field.focus({ preventScroll: true });
+  setTimeout(() => { sheetBusy = false; }, d);
+}
+function dismiss(after) {
+  const s = sheet; if (!s) return;
+  sheetBusy = true;
+  const d = T(reduced() ? 200 : M().sheetOut), ease = ios() ? IOS.ease : ANDROID.exit;
+  if (kbUp) { kbUp = false; kb.style.transition = `transform ${d}ms ${ease}`; kb.style.transform = 'translateY(100%)'; }
+  const f = s.querySelector('input:focus'); if (f) f.blur();
+  if (reduced()) { s.style.transition = `opacity ${d}ms ease-out`; s.style.opacity = '0'; } else sheetTo(s, s.offsetHeight + 40, d, ease);
+  dimTo(false, d);
+  setTimeout(() => { s.hidden = true; sheet = null; sheetBusy = false; after && after(); }, d);
+}
+dim.onclick = () => dismiss();
+// drag a sheet down to close it; upward it only stretches a little
+$$('.sheet').forEach((s) => s.addEventListener('pointerdown', (e) => {
+  if (sheetBusy || sheet !== s || e.target.closest('input')) return;
+  const y0 = e.clientY, base = kbUp ? -KB : 0;
+  let drag = false, dy = 0, lastY = y0, lastT = performance.now(), v = 0;
+  if (!e.target.closest('button')) s.setPointerCapture(e.pointerId); // a button keeps its tap
+  const move = (ev) => {
+    dy = ev.clientY - y0;
+    if (!drag) { if (Math.abs(dy) > 8) { drag = true; s.setPointerCapture(e.pointerId); } else return; }
+    const now = performance.now(); v = (ev.clientY - lastY) / Math.max(1, now - lastT); lastY = ev.clientY; lastT = now;
+    sheetTo(s, base + (dy > 0 ? dy : dy * 0.18), 0);
+  };
+  const up = () => {
+    s.removeEventListener('pointermove', move); s.removeEventListener('pointerup', up); s.removeEventListener('pointercancel', up);
+    if (!drag) return; swallowClick = true;
+    if (dy > s.offsetHeight * 0.28 || v > 0.5) dismiss(); else sheetTo(s, base, T(M().settle), ios() ? IOS.ease : ANDROID.std);
+  };
+  s.addEventListener('pointermove', move); s.addEventListener('pointerup', up); s.addEventListener('pointercancel', up);
+}));
+
+// ---------- a trip: grow from the tile, push, or slide up ----------
+// native (grow): a transparent modal that draws its own container transform from the measured tile
+const detail = L.detail;
+let opened = { how: null, i: -1 };
+function fillDetail(i) {
+  const t = trips[i];
+  $('#heroArt').style.background = t.art; $('#heroName').textContent = t[lang()];
+  // a pushed screen has a back button; a modal (grown or slid up) has a close button
+  $('.x', detail).classList.toggle('off', pref.open === 'push');
+  $('.back', detail).classList.toggle('off', pref.open !== 'push');
+  $('.scroll', detail).scrollTop = 0;
+}
+// The picture flies between the tile's frame and the hero's frame while the rest of the screen fades
+// in or out around it; the name grows with it. native: a shared-element / container transform,
+// animated with transforms (scale + translate) on the UI thread, not with layout props.
+const fly = document.createElement('div'); fly.className = 'fly';
+fly.innerHTML = '<span class="art"></span><span class="nm"></span>'; phone.appendChild(fly);
+const frame = (r, radius) => ({ top: r.top + 'px', left: r.left + 'px', width: r.width + 'px', height: r.height + 'px', borderRadius: radius + 'px' });
+const label = (big) => (big ? { fontSize: '34px', lineHeight: '40px', insetInlineStart: '20px', bottom: '18px' }
+                            : { fontSize: '19px', lineHeight: '24px', insetInlineStart: '14px', bottom: '12px' });
+function flight(fromRect, toRect, grow, d, ease) {
+  const t = trips[opened.i], tileR = ios() ? 24 : 16;
+  $('.art', fly).style.background = t.art; $('.nm', fly).textContent = t[lang()];
+  fly.style.display = 'block';
+  const a = fly.animate([frame(fromRect, grow ? tileR : 0), frame(toRect, grow ? 0 : tileR)], { duration: d, easing: ease, fill: 'forwards' });
+  $('.nm', fly).animate([label(!grow), label(grow)], { duration: d, easing: ease, fill: 'forwards' });
+  return a.finished.then(() => { fly.style.display = 'none'; fly.getAnimations({ subtree: true }).forEach((x) => x.cancel()); });
+}
+function openDetail(i, tile) {
+  if (busy || sheet) return;
+  fillDetail(i); opened = { how: pref.open, i };
+  if (pref.open === 'push') return push('detail');
+  detail.hidden = false; detail.style.zIndex = '10'; stack.push('detail'); busy = true;
+  const done = () => { busy = false; };
+  if (reduced()) { detail.animate([{ opacity: 0 }, { opacity: 1 }], { duration: T(220) }).finished.then(done); return; }
+  if (pref.open === 'up') {
+    const d = T(M().sheetIn);
+    detail.animate([{ transform: `translateY(${H()}px)` }, { transform: 'translateY(0)' }], { duration: d, easing: ios() ? IOS.ease : ANDROID.enter }).finished.then(done);
+    return;
+  }
+  const d = T(M().grow), ease = ios() ? IOS.ease : ANDROID.std, hero = $('#hero');
+  tile.classList.add('ghost'); hero.classList.add('landing');
+  const from = rect(tile), to = { top: 0, left: 0, width: W(), height: hero.offsetHeight };
+  detail.animate([{ opacity: 0 }, { opacity: 1 }], { duration: d * 0.5, easing: 'ease-out' });
+  $('.body', detail).animate([{ opacity: 0, transform: 'translateY(24px)' }, { opacity: 0, offset: 0.35 }, { opacity: 1, transform: 'none' }], { duration: d, easing: ease });
+  flight(from, to, true, d, ease).then(() => { hero.classList.remove('landing'); tile.classList.remove('ghost'); done(); });
+}
+function closeDetail() {
+  if (stack.at(-1) !== 'detail') return;
+  busy = true;
+  const end = () => { detail.hidden = true; stack.pop(); clear(detail); busy = false; };
+  const tile = $(`.tile[data-i="${opened.i}"]`);
+  if (reduced()) { detail.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T(200) }).finished.then(end); return; }
+  if (opened.how === 'up') {
+    detail.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${H()}px)` }], { duration: T(M().sheetOut), easing: ios() ? IOS.ease : ANDROID.exit }).finished.then(end);
+    return;
+  }
+  const r = tile && rect(tile);
+  if (!r || r.top + r.height < 0 || r.top > H()) { // the tile scrolled away: fade instead
+    detail.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T(200) }).finished.then(end); return;
+  }
+  const d = T(M().shrink), ease = ios() ? IOS.ease : ANDROID.std, hero = $('#hero');
+  const from = rect(hero);
+  tile.classList.add('ghost'); hero.classList.add('landing');
+  detail.animate([{ opacity: 1 }, { opacity: 0 }], { duration: d * 0.6, easing: 'ease-out', fill: 'forwards' });
+  flight(from, r, false, d, ease).then(() => {
+    tile.classList.remove('ghost'); hero.classList.remove('landing');
+    detail.getAnimations({ subtree: true }).forEach((a) => a.cancel()); end();
+  });
+}
+
+// ---------- actions ----------
+phone.addEventListener('click', (e) => {
+  const tile = e.target.closest('.tile'); if (tile) return openDetail(+tile.dataset.i, tile);
+  const a = e.target.closest('[data-a]')?.dataset.a;
+  if (a === 'settings') push('settings');
+  if (a === 'back') pop();
+  if (a === 'close') closeDetail();
+  if (a === 'add') { $('#addq').value = ''; $('#addgo').disabled = true; present($('#S-add'), $('#addq')); }
+  if (a === 'name') { $('#nameq').value = myName; present($('#S-name'), $('#nameq')); }
+});
+$('#addq').addEventListener('input', () => { $('#addgo').disabled = !$('#addq').value.trim(); });
+$('#addgo').onclick = () => {
+  const n = $('#addq').value.trim(); if (!n) return;
+  dismiss(() => {
+    trips.unshift({ en: n, ar: n, art: 'linear-gradient(160deg, #A3B18A, #588157)' });
+    render();
+    const t = $('.tile[data-i="0"]'); t.classList.add('enter'); void t.offsetWidth; t.classList.remove('enter');
+    t.animate([{ opacity: 0, transform: 'translateY(14px) scale(.96)' }, { opacity: 1, transform: 'none' }], { duration: T(420), easing: IOS.out });
+  });
+};
+$('#namego').onclick = () => { myName = $('#nameq').value.trim() || myName; dismiss(() => { $('#meName').textContent = myName; }); };
+addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (sheet) dismiss(); else if (stack.length > 1) pop(); } }); // Android back
+
+// ---------- the panel ----------
+function resetPhone() {
+  if (sheet) { sheet.hidden = true; sheet = null; dimTo(false, 0); }
+  kbTo(false, 0); document.activeElement?.blur?.();
+  Object.values(L).forEach((l) => { clear(l); l.getAnimations().forEach((a) => a.cancel()); if (l !== L.home) l.hidden = true; });
+  stack = ['home']; busy = false; $('.scroll', L.home).scrollTop = 0;
+}
+function syncPanel() {
+  for (const k of ['platform', 'open', 'dir', 'theme']) { const r = $(`input[name=${k}][value=${pref[k]}]`); if (r) r.checked = true; }
+  $('#slow').checked = pref.slow; $('#rm').checked = pref.rm;
+}
+$$('.side input[type=radio]').forEach((r) => r.addEventListener('change', () => {
+  pref[r.name] = r.value; save();
+  if (r.name !== 'open') resetPhone();
+  render();
+}));
+$('#slow').onchange = () => { pref.slow = $('#slow').checked; save(); render(); };
+$('#rm').onchange = () => { pref.rm = $('#rm').checked; save(); };
+$('#reset').onclick = () => { resetPhone(); render(); };
+
+syncPanel(); render();
+</script>
+</body>
+</html>
