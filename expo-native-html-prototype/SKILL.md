@@ -61,3 +61,5 @@ Apple's skills ship inside Xcode, so copy them out again after each Xcode update
 - a panel with iPhone/Android, English/Arabic (RTL), light/dark, slow motion ×5 and Reduce Motion, remembered per viewer.
 
 `tools/shoot.mjs` walks the prototype in headless Chrome and saves phone screenshots, for side-by-side checks and for catching mid-transition frames.
+
+Related: `direct-real-phone-testing` (recording and measuring the transitions on the phones) and `project-blueprint` (where `playground/` and the decision log sit in a project).

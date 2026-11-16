@@ -7,7 +7,7 @@ Repo: **github.com/Y3FAI/skills** (public). On my Mac it lives at `~/sync/skills
 ## For AI agents: start here
 
 1. **Find a skill.** Check [My skills](#my-skills) below. If none fits, search **[external.md](external.md)**: 117 skills by others (Apple Xcode, Android, Expo, Cloudflare, web quality, design, …), each with a one-line description and its source.
-2. **Use one of mine.** Read `<skill>/SKILL.md` in full and follow it. Run its scripts by full path, e.g. `python3 ~/sync/skills/flooki-exam/tools/flooki.py check exam.json`. Install what its **Needs** column lists first.
+2. **Use one of mine.** Read `<skill>/SKILL.md` in full and follow it. Run its scripts by full path, e.g. `python3 ~/sync/skills/flooki-exam/tools/flooki.py check exam.json` (or `.agents/skills/<skill>/…` when the skill is installed in the project). Install what its **Needs** column lists first.
 3. **Use an external one.** It may already be installed: check `~/.claude/skills`, `~/.agents/skills`, or the project's `.agents/skills` / `.claude/skills`. If not, install it from the source given in `external.md`. **Don't copy it into this repo.**
 4. **Secrets.** Never read, print or commit tokens. A skill that needs a token says where it lives (for example `~/.config/flooki/token`). If the token is missing, ask the user.
 
@@ -23,6 +23,8 @@ Repo: **github.com/Y3FAI/skills** (public). On my Mac it lives at `~/sync/skills
 | [`expo-native-html-prototype`](expo-native-html-prototype/SKILL.md) | Build native iOS and Android apps in Expo from an HTML prototype: quick design directions, then one working phone prototype (real navigation, swipe and predictive back, sheets with the keyboard, a tile that grows into its screen, iPhone/Android switch, options to compare, slow motion, RTL), the user decides by feel, then each piece is built with the platform's own components and the phone is checked against the prototype | Google Chrome and Node 22 for `tools/shoot.mjs`; Expo's, Google's and Apple's official skills |
 | [`project-blueprint`](project-blueprint/SKILL.md) | Set up or reorganise a project the way a well-run app was managed: AGENTS.md (read order, decisions, map, commands, rules, done), docs/ as the build contract (gated plan, one-page decision log, ADRs, product, architecture, testing, security, operations), research apart from decisions, a playground for HTML design, per-project skills, one CI gate, docs updated with the code. A scaffold that never overwrites | bash, perl (macOS default) |
 | [`llm-chapter-assignment`](llm-chapter-assignment/SKILL.md) | Build and grade the end-of-chapter assignment notebook for Raschka's *Build a Large Language Model (From Scratch)*, with an Arabic lab | the book PDFs and `~/learn/llm-from-scratch` (torch, tiktoken, nbformat) |
+
+**Building an app:** three skills work as a set. Use `project-blueprint` to organise the repo and its docs, `expo-native-html-prototype` to design in HTML and build each platform natively, and `direct-real-phone-testing` to verify on the real phones. Each points to the official Apple, Google and Expo skills for the details.
 
 ## Install on a new machine
 
@@ -41,6 +43,15 @@ mkdir -p ~/.config/flooki && pbpaste > ~/.config/flooki/token && chmod 600 ~/.co
 
 Install the external skills you need from `external.md`.
 
+**Into one project** (how app projects get skills: the repo carries them, any agent finds them):
+
+```sh
+npx skills@latest add Y3FAI/skills -a universal claude-code -y -s project-blueprint expo-native-html-prototype direct-real-phone-testing
+npx skills@latest update -p    # later: refresh the project's skills, mine and the official ones
+```
+
+This writes `.agents/skills/<name>` plus `.claude/skills` links and records them in the project's `skills-lock.json`. `npx skills add Y3FAI/skills -l` lists what's available.
+
 ## Layout
 
 ```
@@ -51,6 +62,7 @@ link.sh              links each skill folder into the agents' skill folders
 <skill>/README.md    human notes: restore steps, history (some skills)
 <skill>/tools/       scripts the skill runs (some skills)
 <skill>/reference/   docs the skill reads when needed (some skills)
+<skill>/templates/   files the skill copies into a project (some skills)
 <skill>/examples/    worked examples (some skills)
 ```
 

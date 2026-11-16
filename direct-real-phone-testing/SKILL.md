@@ -81,4 +81,6 @@ When a step fails, find out why before changing the journey: `ids` on that scree
 
 Tools: `tools/phone.sh`, `tools/android.sh`, `tools/check-plist.sh`, `tools/smooth.sh`, `tools/sheets.mjs`, `tools/framegaps.mjs`, `tools/runner/` (XcodeGen spec + `Steps.swift`, the step list is at its top), `tools/app/diag.ts` + `diag-probe.tsx`, `tools/journeys/01-home.steps`, `tools/phone.env.example`.
 
+Related: `expo-native-html-prototype` (the prototype the phone is checked against) and `project-blueprint` (where this lane sits in a project's docs and testing layers).
+
 Proven on Xcode 27.2, iOS 27, Expo SDK 58 / React Native 0.88, an iPhone 16e and a Galaxy S22 (2026-11). If a newer version breaks something, check the official skills, then update the lesson here.
