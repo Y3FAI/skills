@@ -1,6 +1,6 @@
 ---
 name: browser-use
-description: Drive a real Chrome browser through the Chrome DevTools MCP server (chrome-devtools-mcp). Use whenever a task needs a live page rather than a fetched document — reading the DOM, computed CSS, network requests and their response bodies, console errors, performance traces, screenshots, or clicking and typing through real UI. Covers the full 29-tool surface, the correct call order, and the failure modes that quietly waste a session.
+description: Drive a real browser. Either an isolated Chrome through the Chrome DevTools MCP server (chrome-devtools-mcp), or the user's own logged-in Zen / Firefox through a small WebDriver BiDi driver (for dashboards behind a login, such as Play Console). Use whenever a task needs a live page rather than a fetched document — reading the DOM, computed CSS, network requests and their response bodies, console errors, performance traces, screenshots, or clicking and typing through real UI. Covers the full 29-tool surface, the correct call order, and the failure modes that quietly waste a session.
 ---
 
 # Browser Use
@@ -11,6 +11,16 @@ the page actually made, and the ability to click through it.
 
 Tool names below are bare. Depending on the harness they appear namespaced — e.g.
 `mcp__chrome-devtools-mcp__navigate_page`. Match on the suffix.
+
+## Which browser
+
+| Need | Use |
+|---|---|
+| Public pages, CSS, network, performance | chrome-devtools-mcp (below). Isolated: no logins. |
+| A dashboard behind the user's login (Play Console, App Store Connect, analytics) | The user's own **Zen / Firefox** through the BiDi driver. See [Your own logged-in browser](#your-own-logged-in-browser-zen--firefox). |
+| The user's own **Chrome** with its logins | Not possible. Chrome 136+ ignores `--remote-debugging-port` on the default profile. A separate `--user-data-dir` means logging in again (with 2FA). Prefer Zen/Firefox. |
+
+If the chrome-devtools-mcp tools are not in the session (ToolSearch finds nothing), don't stop: use the BiDi driver, or drive Chrome with `puppeteer-core` directly.
 
 ## How the browser lifecycle works
 
@@ -171,6 +181,36 @@ freezes until `handle_dialog` accepts or dismisses it. If a call hangs, suspect 
 
 **Native file pickers are out of scope.** Use `upload_file` with a `uid` on the file input;
 do not try to drive an OS picker.
+
+## Your own logged-in browser (Zen / Firefox)
+
+Zen is Firefox-based. Firefox has no CDP, only **WebDriver BiDi**, so chrome-devtools-mcp can't drive it. Use `puppeteer-core` over BiDi through `tools/bidi-driver.mjs`. It keeps the user's cookies and logins.
+
+1. **Ask first.** The browser must quit and reopen with remote control on. Tabs and logins come back.
+2. Set up once: `bash ~/sync/skills/browser-use/tools/setup.sh` (installs into `~/.cache/browser-use` and patches Puppeteer for Zen).
+3. Restart with the port open:
+   ```sh
+   osascript -e 'tell application "Zen" to quit'      # wait until pgrep finds no zen
+   open -a Zen --args --remote-debugging-port 9222    # wait until lsof shows :9222 LISTEN
+   ```
+4. Start the driver **in the background** and wait for `ready`: `node ~/.cache/browser-use/bidi-driver.mjs`
+5. Send commands: `curl -s localhost:9333 -d '{"cmd":"open","url":"https://…","name":"01-home"}'`. Commands are listed at the top of the driver. `open`, `goto` and `shot` print the page text as well, so read the text before looking at the image. For longer JavaScript, write it to a file and send `{"cmd":"eval","part":"…","file":"/path/q.js"}`, which avoids JSON quoting problems.
+6. When done: `pkill -TERM -f bidi-driver.mjs` (this ends the session). Then tell the user that Zen stays remote-controllable on `127.0.0.1:9222` until they quit and reopen it normally. The same command reloads the driver after an edit: stop it, then start it again. The browser does not need a restart.
+
+Pitfalls (all hit in practice):
+
+- **`Module goog:cdp does not exist`**: Zen reports `browserName: "zen"`, so Puppeteer treats it as Chrome. `setup.sh` patches `bidi/Browser.js` and `bidi/BrowserConnector.js` to match `zen` as well.
+- **`Maximum number of active sessions`**: Firefox allows **one** BiDi session. A client that dies before `session.end` leaves it open, and the only fix is another browser restart. That is why the driver is one long-lived process that ends the session on SIGTERM, SIGINT and crashes. Never connect with short one-off scripts.
+- **The browser name in the dock may be "Zen" while the user says "Zed".** Check `/Applications`.
+- **Clicking by text hits the wrong element.** Chart legends and tooltips repeat labels. Target `button[aria-haspopup]`, `[role=option]` or `material-select-item` first (the driver's `click` does this), and check with a screenshot.
+- **`click` reports success, but nothing happens.** `click` is a JS `el.click()`, and Angular Material dropdowns and radios ignore it. Use `rclick` (a real mouse click on a CSS selector, optionally filtered by text), or `clickxy` at coordinates measured with `eval`.
+- **Some controls exist only while hovered.** Example: the select radio on a Play Console asset-library row. Run `mouse` over the row, then find the control with `eval`, then use `clickxy`.
+- **Pinned bars (sticky headers and footers) move while the page scrolls.** If you measure an element and then scroll it into view, the click lands in the wrong place. `rclick` scrolls first and measures afterwards. With `clickxy`, measure only after scrolling.
+- **Hover tooltips get into screenshots.** The real pointer sits over the window. Move it to an empty spot before `shot`, such as the top bar (`mouse x=1200 y=60`). The left edge (`x=20`) opens Play Console's side menu.
+- **Wide tables hide columns** behind their own horizontal scroll, and CSS zoom doesn't fix it. Show fewer columns.
+- Screenshots save at 2× (Retina). Check each one with Read before handing it over.
+
+Site recipes: [reference/play-console.md](reference/play-console.md) (MAU, MAU by country, URL-driven reports, changing store-listing graphics and sending them for review).
 
 ## Configuration
 
