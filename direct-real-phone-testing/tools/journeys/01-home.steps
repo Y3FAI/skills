@@ -1,0 +1,21 @@
+# Home: the list loads from the fake data, search finds a name, a row opens its screen.
+# One step per line; "#" starts a comment. Steps are listed at the top of Steps.swift.
+launch
+timeout:20                      # the first launch of a Release build
+expect:home-list
+timeout:10
+see:Sample Item 1               # a name from the fake data, never a real one
+shot:home
+tap:home-search
+expect:home-search-field
+type:Sample
+see:Sample Item 2
+shot:home-search
+tap:home-search-cancel
+scrollto:item-row-12
+tap:item-row-12
+expect:item-screen
+trail:item.open                 # the app's own trail says it opened (diag.ts)
+shot:item
+drag:5,400,300,400              # swipe back from the left edge
+expect:home-list

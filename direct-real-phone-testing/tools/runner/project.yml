@@ -1,0 +1,33 @@
+# The phone runner: a host app plus a UI-test bundle that drives the INSTALLED app on the real
+# iPhone. Generated with XcodeGen by phone.sh (`phone.sh runner`); never a simulator.
+# phone.sh exports PHONE_TEAM_ID and PHONE_RUNNER_BUNDLE_PREFIX before generating.
+name: PhoneRunner
+options:
+  bundleIdPrefix: ${PHONE_RUNNER_BUNDLE_PREFIX}
+  deploymentTarget:
+    iOS: "16.4"
+settings:
+  base:
+    DEVELOPMENT_TEAM: ${PHONE_TEAM_ID}
+    CODE_SIGN_STYLE: Automatic
+    GENERATE_INFOPLIST_FILE: YES
+    SWIFT_VERSION: "5.0"
+targets:
+  Host:
+    type: application
+    platform: iOS
+    sources: [Host]
+  UITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: Host
+schemes:
+  PhoneRunner:
+    build:
+      targets:
+        Host: all
+        UITests: [test]
+    test:
+      targets: [UITests]
