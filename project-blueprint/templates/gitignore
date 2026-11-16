@@ -1,0 +1,36 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# environment and secrets
+.env
+.env.*
+!.env.example
+.dev.vars
+!.dev.vars.example
+*.p8
+*.p12
+*.jks
+*.keystore
+*.mobileprovision
+*service-account*.json
+
+# generated native projects (Expo prebuild)
+**/ios/
+**/android/
+.expo/
+
+# build, coverage, caches, local state
+dist/
+build/
+coverage/
+.wrangler/
+*.tsbuildinfo
+*.log
+e2e/phone/.out/
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
