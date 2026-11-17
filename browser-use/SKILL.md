@@ -209,6 +209,8 @@ Pitfalls (all hit in practice):
 - **Hover tooltips get into screenshots.** The real pointer sits over the window. Move it to an empty spot before `shot`, such as the top bar (`mouse x=1200 y=60`). The left edge (`x=20`) opens Play Console's side menu.
 - **Wide tables hide columns** behind their own horizontal scroll, and CSS zoom doesn't fix it. Show fewer columns.
 - Screenshots save at 2× (Retina). Check each one with Read before handing it over.
+- **Form fields in React or Angular pages ignore `el.value = …`.** Set the value with the element's own setter, then fire the events: `Object.getOwnPropertyDescriptor(Object.getPrototypeOf(el), 'value').set.call(el, v)`, then `input`, `change` and `blur`. `HTMLInputElement.prototype` can fail with "does not implement interface" when the page's elements come from another realm. Check that the page counted it, for example a character counter or a Continue button turning on.
+- **developer.apple.com can stay on a stale session while App Store Connect is signed in correctly.** It says "Unable to find a team with the given Team ID" and offers "Join the Apple Developer Program". Sign out at `developer.apple.com/logout`, choose plain "Sign out" (not "Trust"), and have the user sign in again. Apple shows a new APNs key (`.p8`) for download only once, and it lands in `~/Downloads`. Move it to the user's key folder at once.
 
 Site recipes: [reference/play-console.md](reference/play-console.md) (MAU, MAU by country, URL-driven reports, changing store-listing graphics and sending them for review).
 
