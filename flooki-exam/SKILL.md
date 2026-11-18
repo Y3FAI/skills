@@ -106,4 +106,7 @@ Flooki's own rules are in `reference/flooki-prompt.md`; follow them. In short, a
 - **Bank copies drift from the paper.** A bank copy of a past question may carry different numbers (0.062 Ω where the paper printed 0.06 Ω) or different choices. If the exam is "from the papers", use the paper's own numbers and choices.
 - **Keys in typed sets are often wrong:** joules for watts, an answer ten times too big, a "gold" wire with copper's resistivity. Recompute them.
 - **Ambiguous distractors:** an option like "U = −qEd" next to "ΔU = −W" can also be read as right. Replace it.
-- **Rendering:** checked on 2026-10-20, the exam page bundles remark/micromark (Markdown), KaTeX and Mermaid, so bold, lists and math all render. Plain-text explanations work too.
+- **Rendering (checked in Flooki's code on 2026-11-18):** only `explanation` is rendered as Markdown (bold, lists, GFM tables, KaTeX). Question text, options and short-answer `correctAnswer` use a plain renderer that shows line breaks, `` `code` ``, `$…$`, `$$…$$` and code blocks, and nothing else.
+  - `flooki.py` converts Markdown in those three fields when it sends: tables become KaTeX arrays, bold and italic markers are dropped, and `- ` bullets become `•`. So keep writing Markdown; the exam file stays readable for other uses.
+  - `show` prints the three fields the way students will see them.
+  - Display math scrolls sideways when it is wider than the card, so wide tables stay readable at `\scriptsize`.

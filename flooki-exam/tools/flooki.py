@@ -72,8 +72,69 @@ def save(path: Path, exam: dict) -> None:
     path.write_text(json.dumps(exam, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+# ------------------------------------------------------------------ plain fields
+# Flooki renders only `explanation` as Markdown. Question text, options and short-answer answers go through its
+# plain renderer: line breaks, `code`, $…$, $$…$$ and ``` blocks, nothing else (Flooki's ExamRichText, checked
+# 2026-11-18). There **bold** shows its asterisks and a Markdown table shows raw pipes, so before sending,
+# plain() turns tables into KaTeX arrays, drops emphasis markers and turns "- " bullets into "• ".
+# The exam file itself keeps its Markdown.
+
+_TABLE = re.compile(r"(?:^[ \t]*\|.*\|[ \t]*(?:\n|$)){2,}", re.M)
+_KEEP = re.compile(r"\$\$.*?\$\$|```.*?```|`[^`\n]*`|(?<!\\)\$[^$\n]+?(?<!\\)\$", re.S)
+_TEX_ESC = {"\\": r"\textbackslash{}", "~": r"\textasciitilde{}", "^": r"\textasciicircum{}"}
+
+
+def _cell(c: str) -> str:
+    c = c.strip()
+    bold = bool(re.fullmatch(r"\*\*(.+)\*\*", c))
+    c = re.sub(r"\*\*(.+?)\*\*", r"\1", c)
+    out = []
+    for part in re.split(r"(\$[^$]+\$)", c):
+        if len(part) > 1 and part.startswith("$") and part.endswith("$"):
+            out.append(part[1:-1])
+        elif part:
+            esc = re.sub(r"[\\{}&%#_^~$]", lambda m: _TEX_ESC.get(m[0], "\\" + m[0]), part)
+            out.append((r"\textbf{%s}" if bold else r"\text{%s}") % esc)
+    return "".join(out)
+
+
+def _table(block: str) -> str:
+    rows = [r.strip().strip("|").split("|") for r in block.strip().splitlines()]
+    sep = [i for i, r in enumerate(rows) if all(re.fullmatch(r"\s*:?-{2,}:?\s*", c) for c in r)]
+    if not sep:
+        return block
+    rows = [r for i, r in enumerate(rows) if i not in sep]
+    n = max(len(r) for r in rows)
+    # the card is ~290 px on a phone; wider tables scroll sideways (Flooki's math block has overflow-x: auto)
+    chars = max(sum(len(c.strip().strip("*")) + 2 for c in r) for r in rows)
+    size = r"\footnotesize" if chars <= 36 else r"\scriptsize"
+    lines = [" & ".join(_cell(c) for c in r + [""] * (n - len(r))) for r in rows]
+    return ("$$" + size + r"\begin{array}{|l|" + "c|" * (n - 1) + r"}\hline " + r" \\ \hline ".join(lines)
+            + r" \\ \hline\end{array}$$" + ("\n" if block.endswith("\n") else ""))
+
+
+def plain(s):
+    """Markdown → what Flooki's plain renderer can show (see the note above)."""
+    if not isinstance(s, str) or not s:
+        return s
+    s = _TABLE.sub(lambda m: _table(m[0]), s)
+    kept: list[str] = []
+    s = _KEEP.sub(lambda m: kept.append(m[0]) or f"\x00{len(kept) - 1}\x00", s)
+    s = re.sub(r"\*\*(.+?)\*\*", r"\1", s, flags=re.S)
+    s = re.sub(r"(?<![\w*\\])\*(?=\S)([^*\n]+?)(?<=\S)\*(?![\w*])", r"\1", s)
+    s = re.sub(r"^(\s*)[-*+] (?=\S)", r"\1• ", s, flags=re.M)
+    s = re.sub(r"^#{1,6} +", "", s, flags=re.M)
+    return re.sub("\x00(\\d+)\x00", lambda m: kept[int(m[1])], s)
+
+
 def clean(q: dict) -> dict:
-    return {k: q[k] for k in SENT if k in q}
+    out = {k: q[k] for k in SENT if k in q}
+    for k in ("text", "correctAnswer"):
+        if k in out:
+            out[k] = plain(out[k])
+    if isinstance(out.get("options"), list):
+        out["options"] = [plain(o) for o in out["options"]]
+    return out
 
 
 def body(exam: dict) -> dict:
@@ -242,13 +303,13 @@ def cmd_show(args) -> int:
     print(f"# {exam['title']}\n{exam.get('description', '')}\n{json.dumps(exam.get('metadata', {}), ensure_ascii=False)}\n")
     for i, q in enumerate(exam["questions"], 1):
         print(f"--- Q{i} · {q.get('type')} · {q.get('topic', '')}" + (f" · source: {q['source']}" if q.get("source") else ""))
-        print(q.get("text", ""))
+        print(plain(q.get("text", "")))   # text, options and answers as Flooki shows them (see plain())
         if q.get("img"):
             print("[figure: " + ("SVG" if "<svg" in q["img"] else "Mermaid") + "]")
         for j, o in enumerate(q.get("options") or []):
-            print(f"  {'*' if j == q.get('correctIndex') else ' '} {'ABCDEFGH'[j]}. {o}")
+            print(f"  {'*' if j == q.get('correctIndex') else ' '} {'ABCDEFGH'[j]}. {plain(o)}")
         if q.get("correctAnswer"):
-            print(f"  answer: {q['correctAnswer']}")
+            print(f"  answer: {plain(q['correctAnswer'])}")
         print("  explanation: " + q.get("explanation", "").replace("\n", "\n    ") + "\n")
     print(summary(exam))
     return 0
